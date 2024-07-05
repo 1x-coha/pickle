@@ -12,4 +12,8 @@ def csv_add_row(file, new_data):
     # Read existing CSV into a DataFrame
     df = pd.read_csv(file)
 
-    # currently broken
+    # Add new row data to df
+    df + new_data
+
+    # Write df to csv
+    pd.to_csv(df)

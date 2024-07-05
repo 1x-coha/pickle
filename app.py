@@ -9,14 +9,14 @@ csv_files = {
 }
 
 # Streamlit app title
-st.title('Robot Training')
+st.title('Robot Training :cucumber:')
 
 # Tabs
 tab1, tab2, tab3, tab4 = st.tabs(['Plan', 'Collect', 'Train', 'Test'])
 
 # Tab 1: Plan
 with tab1:
-    st.header('Project')
+    '## Project'
 
     # Fetch project names from csv
     projects = csv_list_row_values(csv_files['projects'], 'Name')
@@ -25,7 +25,7 @@ with tab1:
     selected_project = st.selectbox('Selected project', projects)
 
     # Expander to display current csv contents
-    with st.expander('Display projects.csv contents', expanded=False):
+    with st.expander('Show projects table', expanded=False):
         df = pd.read_csv(csv_files['projects'])
         st.write(df)
 
@@ -44,10 +44,7 @@ with tab1:
             }
             csv_add_row(csv_files['projects'], new_data)
             st.success('New project created')
-
-    # Display project name
-    st.write(f'Project: {selected_project}')
-
-    # TODO: Button to delete selected project
-
+        
+    # TODO Button to delete or hide selected project
+    st.button('Archive project')
     
