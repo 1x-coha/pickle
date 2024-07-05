@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from utils import csv_list_row_values, csv_add_row
+from utils import csv_list, csv_add_row
 
 # csv file paths
 csv_files = {
@@ -18,12 +18,6 @@ tab1, tab2, tab3, tab4 = st.tabs(['Plan', 'Collect', 'Train', 'Test'])
 with tab1:
     '## Project'
 
-    # Fetch project names from csv
-    projects = csv_list_row_values(csv_files['projects'], 'Name')
-
-    # Create select box
-    selected_project = st.selectbox('Selected project', projects)
-
     # Expander to display current csv contents
     with st.expander('Show projects table', expanded=False):
         df = pd.read_csv(csv_files['projects'])
@@ -34,17 +28,24 @@ with tab1:
         # Input fields
         new_name = st.text_input('Name')
         new_url = st.text_input('Jira issue url')
+        new_libs = st.text_input('Skill libraries')
 
         # Button to add new row to csv
         if st.button('Create'):
             # Add new data row
             new_data = {
+                'ID': '',
                 'Name': new_name,
-                'Jira issue': new_url
+                'URL': new_url,
+                'Libraries': ''
             }
-            csv_add_row(csv_files['projects'], new_data)
+            new_data = pd.DataFrame(new_data, index=[0])
+            csv_add_row(csv_files['projects'], new_data, 'PRO-')
             st.success('New project created')
-        
-    # TODO Button to delete or hide selected project
-    st.button('Archive project')
     
+    # Select box to select project from list
+    projects = csv_list(csv_files['projects'], ['ID','Name'])
+    selected_project = st.selectbox('Selected project', projects)
+
+    # TODO Button to delete or hide selected project
+    st.button('Trash project')
