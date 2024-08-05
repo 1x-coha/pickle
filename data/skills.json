@@ -1,0 +1,13 @@
+{
+    "Pick up object": {
+        "Pick up can": {},
+        "Pick up bottle": {}
+    },
+    "Traverse door": {
+        "Open door": {
+            "Push door open": {},
+            "Pull door open": {}
+        }
+    },
+    "Open object": {}
+}
