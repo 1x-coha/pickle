@@ -5,7 +5,7 @@ import json
 
 # Sidebar
 with st.sidebar:
-    'Hello USER!'
+    'Hello USER! :clown_face:'
     with st.expander('My settings'):
         'Settings'
     'Some more stuff'
