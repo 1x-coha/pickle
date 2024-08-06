@@ -96,20 +96,33 @@ with tab_1:
 
 # Logs tab
 with tab_2:
-    col_1, col_2 = st.columns(2)
+    # Read logs csv
+    logs_data = pd.read_csv(logs_file_path)
+    logs_data = logs_data.sort_index(ascending=False)
 
-    with col_1:
-        '#### Logs'
-        with st.container(border=True, height=300):
-            button = []
-            for i in range(20):
-                button.append(st.button(f"`Ailog_E2-123_12-34-56_12-34-56_{i}`"))
-            
-    with col_2:
-        '#### Details'
-        with st.container(border=True, height=300):
-            f'**Ailog_E2-123_12-34-56_12-34-56_**'
+    # Log selection
+    st.multiselect(
+        'Select a log to inspect',
+        options=logs_data
+        )
 
+    # Column visibility selection
+    visible_columns = st.multiselect(
+        'Select columns to show',
+        options=logs_data.columns,
+        default=['Name', 'File name', 'Created time']
+    )
+
+    # Logs table
+    if 'logs_data' not in st.session_state:
+        st.session_state.logs_data = logs_data
+
+    event = st.dataframe(
+        st.session_state.logs_data[visible_columns], 
+        key='data',
+        on_select='rerun',
+        selection_mode='multi-row'
+        )
 
 
 
