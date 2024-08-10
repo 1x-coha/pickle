@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import json
 import datetime
+import pytz
 
 # Sidebar
 with st.sidebar:
@@ -94,6 +95,12 @@ with tab_1:
 
 # Logs tab
 with tab_2:
+    # pytz Time zones
+    time_zones = {
+        'Sunnyvale (PST)': pytz.timezone('America/Los_Angeles'),
+        'Moss (CET)': pytz.timezone('Europe/Oslo')
+    }
+
     # Placeholder for ailog files from directory
     log_files = [
         'ailog_E2-033_2024_07_22-18_33_13',
@@ -103,101 +110,36 @@ with tab_2:
         'ailog_E2-033_2024_07_24-05_00_00'
         ]
     
+    # Time zone selector
+    selected_time_zone = st.selectbox(
+        'Timezone selection',
+        time_zones,
+        index=0
+        )
+
     # Format file names into df
     logs_data = []
     for log in log_files:
+        # Combine Date and Time into a single datetime object
+        date_str = log[13:23].replace('_', '-')
+        time_str = log[24:32].replace('_', ':')
+        
+        # Assume the datetime in the log is in UTC
+        datetime_combined = pd.to_datetime(f"{date_str} {time_str}", utc=True)
+        
+        # Convert from UTC to PST and then remove the timezone information
+        datetime_converted = datetime_combined.tz_convert(time_zones[selected_time_zone]).tz_localize(None)
+
+        # Make row dict and append
         row = {
             'File': log,
             'Robot': log[6:12],
-            'Date': pd.to_datetime(log[13:23].replace('_', '-')),
-            'Time': pd.to_datetime(log[24:32].replace('_', ':'))
-        }
-        logs_data.append(row)
-    df = pd.DataFrame(logs_data)
-    df_configured = st.dataframe(
-        logs_data, 
-        column_config={
-            'Date': st.column_config.DateColumn(),
-            'Time': st.column_config.TimeColumn()
+            'Datetime': datetime_converted  # Combined datetime in PST
             }
-        )
+        logs_data.append(row)
 
-    # Column visibility selection
-    visible_columns = st.multiselect(
-        'Select columns to show',
-        options=df.columns,
-        default=['Robot', 'Date', 'Time']
-    )
-    
-    # Write logs dataframe
-    st.data_editor(
-        df_configured,
-        disabled=['File', 'Robot', 'Date', 'Time']
-        )
+    #Make pandas DataFrame
+    df = pd.DataFrame(logs_data)
 
-    # Logs table
-    if 'logs_data' not in st.session_state:
-        st.session_state.logs_data = logs_data
-
-    event = st.dataframe(
-        st.session_state.logs_data[visible_columns], 
-        key='data',
-        on_select='rerun',
-        selection_mode='multi-row'
-        )
-    
-    st.write(event)
-
-
-
-
-if False:
-    '# ---Old stuff for code reference---'
-
-    # Tabs
-    tab_1, tab_2, tab_3, tab_4 = st.tabs(['Log Collection', 'Model Training', 'Policy Testing', 'Data Editor'])
-
-    # Logs tab
-    with tab_1:
-        logs_data = pd.read_csv(logs)
-        st.dataframe(logs_data)
-
-    # Data table editor tab
-    with tab_4:
-        editor_selection = st.selectbox('Select a table to edit', 
-                ['Projects', 
-                'Skill libraries',
-                'Skills',
-                '',
-                'Logs',
-                'Robots'])
-
-        if(editor_selection == 'Projects'):
-            pass
-        elif(editor_selection == 'Skill Libraries'):
-            pass
-        elif(editor_selection == 'Logs'):
-            st.data_editor(logs_data)
-        elif(editor_selection == 'Models'):
-            pass
-        elif(editor_selection == 'Base models'):
-            pass
-        elif(editor_selection == 'Robots'):
-            pass
-        elif(editor_selection == 'Skills'):
-            pass
-
-    # Log Collection section
-    '## Logs'
-    st.multiselect('Select logs',[
-        'Log 1',
-        'Log 2',
-        'Log 3'
-        ])
-
-    # Model Training section
-    '## Model'
-    st.selectbox('Select a base model',[
-        'Wander',
-        'Anytask'
-        ])
+    # Display DataFrame in Streamlit
+    st.dataframe(df)
