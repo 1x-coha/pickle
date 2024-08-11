@@ -4,6 +4,7 @@ import numpy as np
 import json
 import datetime
 import pytz
+from graphviz import Digraph
 
 # Sidebar
 with st.sidebar:
@@ -24,20 +25,40 @@ tab_1, tab_2 = st.tabs(['📚 Skills', '🪵 Logs'])
 
 # Skills tab
 with tab_1:
+    # Load skills json file and store data
+    with open(skills_file_path, 'r') as file:
+        skills_data = json.load(file)
+
+    # Graphviz skill tree view
     with st.container():
-        # Load skills file and store data
-        with open(skills_file_path, 'r') as file:
-            skill_tree = json.load(file)
+        # Recursive function to add nodes and edges
+        def add_nodes_edges(dot, parent_name, data):
+            for key, value in data.items():
+                dot.node(key)
+                dot.edge(parent_name, key, dir='back')
+                if isinstance(value, dict):
+                    add_nodes_edges(dot, key, value)
 
-        # Skill Tree section
-        st.header('🌳 Skill Tree')
-        with st.container(border=True, height=500):
-            st.write(skill_tree)
+        # Create the graph
+        dot = Digraph(comment='Skill Tree')
+        dot.attr(bgcolor='none')
+        dot.attr('node', color='white', fontcolor='white', shape='rect')
+        dot.attr('edge', color='#F0F2F6')
 
-        # Create a new skill TODO
+        # Add nodes and edges starting from the root nodes
+        for key in skills_data:
+            dot.node(key)
+            add_nodes_edges(dot, key, skills_data[key])
+
+        # Render the graph
+        st.graphviz_chart(dot)
+
+    # Skill editor
+    with st.container():
+        # Popover form to create a new skill
         st.popover('Create new skill')
 
-        # Function: Flatten dictionary
+        # Function to flatten the skills data into a selectable list
         def flatten_dict(d, parent_key='', sep=' > '):
             items = []
             for k, v in d.items():
@@ -46,19 +67,19 @@ with tab_1:
                 if isinstance(v, dict) and v:
                     items.extend(flatten_dict(v, new_key, sep=sep))
             return items
-        
-        # Flatten the skill tree and make a list
-        flattened_skill_tree = flatten_dict(skill_tree)
-        flattened_skill_tree = sorted(set(flattened_skill_tree))
-        skill_list = flattened_skill_tree
+    
+    # Flatten the skill tree and make a list
+    flattened_skills_data = flatten_dict(skills_data)
+    flattened_skills_data = sorted(set(flattened_skills_data))
+    skill_list = flattened_skills_data
 
-        # Skill selector
-        selected_skill = st.selectbox(
-            'Which skill would you like to edit?', 
-            skill_list,
-            index=None,
-            placeholder='Choose a skill'
-            )
+    # Skill selector
+    selected_skill = st.selectbox(
+        'Which skill would you like to edit?', 
+        skill_list,
+        index=None,
+        placeholder='Choose a skill'
+        )
         
     # Rename TODO
     with st.popover('Rename', disabled=selected_skill==None):
@@ -71,7 +92,7 @@ with tab_1:
 
     # Re-parent TODO
     with st.popover('Re-parent', disabled=selected_skill==None):
-        skill_list_filtered = [skill for skill in flattened_skill_tree if skill != selected_skill]
+        skill_list_filtered = [skill for skill in flattened_skills_data if skill != selected_skill]
         selected_parent_skill = st.selectbox(
             'Select a new parent',
             skill_list_filtered,
@@ -112,7 +133,7 @@ with tab_2:
     
     # Time zone selector
     selected_time_zone = st.selectbox(
-        'Timezone selection',
+        'Select a time zone',
         time_zones,
         index=0
         )

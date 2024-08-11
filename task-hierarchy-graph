@@ -1,0 +1,19 @@
+// Skill Tree
+digraph {
+	bgcolor=none
+	node [color=red fontcolor=red]
+	edge [color=red]
+	"Pick up object"
+	"Pick up can"
+	"Pick up object" -> "Pick up can"
+	"Pick up bottle"
+	"Pick up object" -> "Pick up bottle"
+	"Traverse door"
+	"Open door"
+	"Traverse door" -> "Open door"
+	"Push door open"
+	"Open door" -> "Push door open"
+	"Pull door open"
+	"Open door" -> "Pull door open"
+	"Open object"
+}
