@@ -14,7 +14,7 @@ with st.sidebar:
     'Some more stuff'
 
 # Data sources
-skills_file_path = 'data/skills.json'
+
 logs_file_path = 'data/logs.csv'
 
 # App title
@@ -25,6 +25,13 @@ tab_1, tab_2 = st.tabs(['📚 Skills', '🪵 Logs'])
 
 # Skills tab
 with tab_1:
+    # Skills data source
+    skills_file_path = 'data/skills.json'
+
+    '# csv version'
+    skills_csv_path = 'data/skills.json'
+
+    '# json version'
     # Load skills json file and store data
     with open(skills_file_path, 'r') as file:
         skills_data = json.load(file)
@@ -75,7 +82,7 @@ with tab_1:
 
     # Skill selector
     selected_skill = st.selectbox(
-        'Which skill would you like to edit?', 
+        'Select a skill to edit', 
         skill_list,
         index=None,
         placeholder='Choose a skill'
@@ -89,6 +96,7 @@ with tab_1:
             f'Rename to :orange[**{name_input}**]',
             disabled=name_input=='',
             )
+    ':green[Selected node -> Parent node (or top level with no parent)]'
 
     # Re-parent TODO
     with st.popover('Re-parent', disabled=selected_skill==None):

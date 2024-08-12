@@ -1,0 +1,8 @@
+id,parent,name,description
+1,,Pick up object,Pick up a single object
+2,1,Pick up can,Pick up a can
+3,1,Pick up bottle,Pick up a bottle
+4,,Traverse door,Open a door and enter the room
+5,4,Open door,Open a door
+6,5,Push door open,Open a door by pushing
+7,5,Pull door open,Open a door by pulling
