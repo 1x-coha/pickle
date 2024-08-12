@@ -21,106 +21,120 @@ logs_file_path = 'data/logs.csv'
 st.title('Pickle 🥒')
 
 # Tabs
-tab_1, tab_2 = st.tabs(['📚 Skills', '🪵 Logs'])
+tab_1, tab_2 = st.tabs(['🔧Skills', '🪵Logs'])
 
 # Skills tab
 with tab_1:
-    # Skills data source
-    skills_file_path = 'data/skills.json'
+    # Load csv file and convert to dictionary
+    skills_csv_path = 'data/skills.csv'
+    df = pd.read_csv(skills_csv_path)
+    nodes = {row['id']: row for _, row in df.iterrows()}
+    
+    # Skill tree section
+    with st.container(border=True):
+        '### 🌳Skill tree'
 
-    '# csv version'
-    skills_csv_path = 'data/skills.json'
+        # Function to determine the style based on priority
+        def get_node_style(priority):
+            if priority == 'high':
+                return {
+                    'shape': 'box', 
+                    'color': 'blue', 
+                    'style': 'solid,bold', 
+                    'fontcolor': 'white'}
+            elif priority == 'mid':
+                return {
+                    'shape': 'box', 
+                    'color': 'green', 
+                    'style': 'solid', 
+                    'fontcolor': 'white'}
+            else:  # low priority
+                return {
+                    'shape': 'box', 
+                    'color': 'gray', 
+                    'style': 'solid', 
+                    'fontcolor': 'white'}
 
-    '# json version'
-    # Load skills json file and store data
-    with open(skills_file_path, 'r') as file:
-        skills_data = json.load(file)
-
-    # Graphviz skill tree view
-    with st.container():
         # Recursive function to add nodes and edges
-        def add_nodes_edges(dot, parent_name, data):
-            for key, value in data.items():
-                dot.node(key)
-                dot.edge(parent_name, key, dir='back')
-                if isinstance(value, dict):
-                    add_nodes_edges(dot, key, value)
+        def add_nodes_edges(dot, parent_id):
+            for node_id, node_data in nodes.items():
+                if pd.isna(node_data['parent']) and parent_id is None:
+                    # Handle root nodes (where parent is None)
+                    label = f'{node_data["name"]}'
+                    style = get_node_style(node_data['priority'])
+                    dot.node(str(node_id), label=label, **style)
+                    add_nodes_edges(dot, node_id)
+                elif node_data['parent'] == parent_id:
+                    # Handle child nodes
+                    label = f'{node_data["name"]}'
+                    style = get_node_style(node_data['priority'])
+                    dot.node(str(node_id), label=label, **style)
+                    dot.edge(str(parent_id), str(node_id), dir='back', color='white')
+                    add_nodes_edges(dot, node_id)
 
         # Create the graph
         dot = Digraph(comment='Skill Tree')
-        dot.attr(bgcolor='none')
-        dot.attr('node', color='white', fontcolor='white', shape='rect')
-        dot.attr('edge', color='#F0F2F6')
+        dot.attr(bgcolor='#0E1117')
 
-        # Add nodes and edges starting from the root nodes
-        for key in skills_data:
-            dot.node(key)
-            add_nodes_edges(dot, key, skills_data[key])
+        # Add nodes and edges starting from the root nodes (where parent is NaN or empty)
+        add_nodes_edges(dot, None)
 
         # Render the graph
         st.graphviz_chart(dot)
+    
+    # Skill editor section
+    with st.container(border=True):
+        '### ⚒️Skill editor'
 
-    # Skill editor
-    with st.container():
-        # Popover form to create a new skill
+        # Create a mapping from name to id
+        name_to_id = {f"{row['name']}": row['id'] for _, row in df.iterrows()}
+
+        # Display the names in a selectbox
+        selected_name = st.selectbox('Select a Skill to Edit', list(name_to_id.keys()))
+
+        # Retrieve the corresponding node
+        selected_id = name_to_id[selected_name]
+        selected_node = nodes[selected_id]
+
+        # Display the selected node details (for demonstration)
+        st.write(f":gray[Skill ID:] {selected_id}")
+        st.write(f":gray[Name:] {selected_node['name']}")
+        st.write(f":gray[Description:] {selected_node['description']}")
+        st.write(f":gray[Current Parent ID:] {selected_node['parent']}")
+
+        # Selectbox to choose a new parent
+        # Add an option for "No Parent" which means the skill becomes a root node
+        parent_options = ["No Parent"] + [f"{row['id']}: {row['name']}" for _, row in df.iterrows() if row['id'] != selected_id]
+        new_parent = st.selectbox("Select New Parent", parent_options)
+
+        # Button to update the parent
+        if st.button("Update Parent"):
+            if new_parent == "No Parent":
+                nodes[selected_id]['parent'] = None
+            else:
+                new_parent_id = int(new_parent.split(":")[0])
+                nodes[selected_id]['parent'] = new_parent_id
+
+            # Update the DataFrame with the new parent
+            df.loc[df['id'] == selected_id, 'parent'] = nodes[selected_id]['parent']
+
+            # Save the updated DataFrame to the CSV file
+            df.to_csv(skills_csv_path, index=False)
+
+            st.success(f"Parent updated to {new_parent}")
+
+        # Optionally display the updated DataFrame or skill details
+        st.write("Updated Skill Details:")
+        st.write(f"Name: {selected_node['name']}")
+        st.write(f"Description: {selected_node['description']}")
+        st.write(f"New Parent ID: {nodes[selected_id]['parent']}")
+
+        # Optional: Popover form to create a new skill
         st.popover('Create new skill')
 
-        # Function to flatten the skills data into a selectable list
-        def flatten_dict(d, parent_key='', sep=' > '):
-            items = []
-            for k, v in d.items():
-                new_key = parent_key + sep + k if parent_key else k
-                items.append(k)
-                if isinstance(v, dict) and v:
-                    items.extend(flatten_dict(v, new_key, sep=sep))
-            return items
-    
-    # Flatten the skill tree and make a list
-    flattened_skills_data = flatten_dict(skills_data)
-    flattened_skills_data = sorted(set(flattened_skills_data))
-    skill_list = flattened_skills_data
-
-    # Skill selector
-    selected_skill = st.selectbox(
-        'Select a skill to edit', 
-        skill_list,
-        index=None,
-        placeholder='Choose a skill'
-        )
-        
-    # Rename TODO
-    with st.popover('Rename', disabled=selected_skill==None):
-        selected_skill
-        name_input = st.text_input('Enter a new name', placeholder=selected_skill)
-        st.button(
-            f'Rename to :orange[**{name_input}**]',
-            disabled=name_input=='',
-            )
-    ':green[Selected node -> Parent node (or top level with no parent)]'
-
-    # Re-parent TODO
-    with st.popover('Re-parent', disabled=selected_skill==None):
-        skill_list_filtered = [skill for skill in flattened_skills_data if skill != selected_skill]
-        selected_parent_skill = st.selectbox(
-            'Select a new parent',
-            skill_list_filtered,
-            index=None,
-            placeholder='Current parent skill???'
-            )
-        st.button(
-            f'Re-parent under :orange[**{selected_parent_skill}**]',
-            disabled=selected_parent_skill==None
-            )
-        
-    # Delete TODO
-    with st.popover('Delete', disabled=selected_skill==None):
-        ':red[Are you sure you want to delete this skill?]'
-        st.button(f'Yes, delete :orange[**{selected_skill}**]')
-
     # Policies section
-    st.header('🚀 Policies')
     with st.container(border=True):
-        ''
+        '### 🚀Policies'
 
 # Logs tab
 with tab_2:

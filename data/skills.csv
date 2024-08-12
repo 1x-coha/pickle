@@ -1,8 +1,10 @@
-id,parent,name,description
-1,,Pick up object,Pick up a single object
-2,1,Pick up can,Pick up a can
-3,1,Pick up bottle,Pick up a bottle
-4,,Traverse door,Open a door and enter the room
-5,4,Open door,Open a door
-6,5,Push door open,Open a door by pushing
-7,5,Pull door open,Open a door by pulling
+id,name,parent,type,priority,description,notes,contributors,operators needed,status,last updated
+1,Disconnect from charger,,manipulation,high,,,,1.0,,
+2,Connect to charger,,manipulation,high,,,,1.0,,
+3,Pick up two-handed object,8.0,manipulation,low,Pick up container (currently basket) with both hands,,Brian,1.0,in progress,
+4,,,,,,,,,,
+5,,,,,,,,,,
+6,,,,,,,,,,
+7,,,,,,,,,,
+8,Goal cond. pick up object,,manipulation,mid,george is working on a SAM2 approach to 'pick object in bounding box in space'. Will in parallel work on finding actually useful pick data,,Turing,1.0,,
+22,Pick up object,8,manipulation,high,desc,notes,"Tracy,Chris",1,in progress,
