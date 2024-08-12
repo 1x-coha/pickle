@@ -46,13 +46,13 @@ with tab_1:
                 return {
                     'shape': 'box', 
                     'color': 'green', 
-                    'style': 'solid', 
+                    'style': 'dashed', 
                     'fontcolor': 'white'}
             else:  # low priority
                 return {
                     'shape': 'box', 
                     'color': 'gray', 
-                    'style': 'solid', 
+                    'style': 'dotted', 
                     'fontcolor': 'white'}
 
         # Recursive function to add nodes and edges
